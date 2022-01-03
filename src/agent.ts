@@ -174,21 +174,26 @@ export default class SocksProxyAgent extends Agent {
 			// this socket connection to a TLS connection.
 			debug('Upgrading socket connection to TLS');
 			const servername = opts.servername || opts.host;
-			const tlsSocket = tls.connect({
+			return new Promise((resolve, reject) => {
+			  const tlsSocket = tls.connect({
 				...omit(opts, 'host', 'hostname', 'path', 'port'),
 				socket,
 				servername,
 				...this.tlsConnectionOptions,
-			});
-
-			tlsSocket.once('error', () => {
+			  });
+			  const onError = (e) => {
 				socket.removeAllListeners();
 				tlsSocket.removeAllListeners();
 				socket.destroy();
 				tlsSocket.destroy();
+				reject(e);  
+			  };
+			  tlsSocket.once('secureConnect', () => {
+				tls.removeListener('error', onError);
+				resolve(tlsSocket);
+			  });
+			  tlsSocket.once('error', onError);
 			});
-			
-			return tlsSocket;
 		}
 
 		return socket;
