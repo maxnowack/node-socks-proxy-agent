@@ -181,7 +181,7 @@ export default class SocksProxyAgent extends Agent {
 				servername,
 				...this.tlsConnectionOptions,
 			  });
-			  const onError = (e) => {
+			  const onError = (e: Error) => {
 				socket.removeAllListeners();
 				tlsSocket.removeAllListeners();
 				socket.destroy();
@@ -189,7 +189,7 @@ export default class SocksProxyAgent extends Agent {
 				reject(e);  
 			  };
 			  tlsSocket.once('secureConnect', () => {
-				tls.removeListener('error', onError);
+				tlsSocket.removeListener('error', onError);
 				resolve(tlsSocket);
 			  });
 			  tlsSocket.once('error', onError);
